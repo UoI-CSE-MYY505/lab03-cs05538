@@ -59,6 +59,7 @@ image565:
     li   a2,  6 # height
     jal  ra, rgb888_to_rgb565
 
+
     addi a7, zero, 10 
     ecall
 
@@ -100,7 +101,41 @@ outShowRowLoop:
 rgb888_to_rgb565:
 # ----------------------------------------
 # Write your code here.
+    add t0, zero, zero #t0 = counter
+    mul t5, a1, a2 #t1 = total pixels
+    
+rgb888_to_rgb565_loop:
+    beq t0, t5, end_subtoutine
+    
+    lbu t1, 0(a0) # t1 = Red
+    lbu t2, 1(a0)  #t2 = Green
+    lbu t3, 2(a0)  #t3 = Blue
+    
+    #convert to rgb565
+    srli t1, t1, 3 # to keep 5 most important bits from colour red t1 = 000+R[7:3]
+    srli t2, t2, 2 # to keep 6 most important bits from colour Green t2 = 00+G[7:2]
+    srli t3, t3, 3 # to keep 5 most important bits from colour Blue t3 = 000+B[7:3]
+    
+    slli t1, t1, 3 # left shift for colour Red and add 3 zeros at the end t1 = R[7:3]+000
+    srli t4, t2, 3 #t4 = 00000+G[7:5]
+    slli t2, t2, 5 #t2 = G[4:2]+00000
+    
+    or t1, t1, t4    #create the first half-word
+    or t2, t2, t3    #create the second half-word
+    
+    #store converted words to a3
+    sw t1, 0(a3)
+    sw t2, 1(a3)
+    
+    #upgrade values
+    addi a3, a3, 2
+    addi t0, t0, 1
+    addi a0, a0, 3
+    
+    #continue to loop
+    j rgb888_to_rgb565_loop
+    
+end_subtoutine:    
+    
 # You may move the "return" instruction (jalr zero, ra, 0).
-    jalr zero, ra, 0
-
-
+     jalr zero, ra, 0
